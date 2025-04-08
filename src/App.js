@@ -7,14 +7,14 @@ function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          {/* Redirect "/" to "/register" */}
-          <Route path="/" element={<Navigate to="/register" />} /> 
-          <Route path="/register" element={<RegisterPage />} /> 
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-        </Routes>
-      </BrowserRouter>
+  <Routes>
+    <Route path="/" element={<Navigate to="/register" />} />
+    <Route path="/register" element={<RegisterPage />} />
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/dashboard" element={<DashboardPage />} />
+  </Routes>
+</BrowserRouter>
+
     </div>
   );
 }
