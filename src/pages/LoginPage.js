@@ -7,6 +7,8 @@ import { Link, Navigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import { useAuth} from '../context/AuthContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage (){
     const initialStateErrors = {
@@ -60,9 +62,16 @@ export default function LoginPage (){
         setShowPassword(!showPassword);
     };
 
+    const navigate = useNavigate();
+
+useEffect(() => {
     if (isAuthenticated()) {
-        return <Navigate to="/dashboard" />
+        const timer = setTimeout(() => {
+            navigate("/dashboard");
+        }, 500); // 0.5 second delay
+        return () => clearTimeout(timer);
     }
+}, []);
 
     return (
         <div>

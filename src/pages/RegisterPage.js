@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { RegisterApi } from '../services/Api';
 import { isAuthenticated } from '../services/Auth';
 import { storeUserData } from '../services/Storage';
@@ -67,8 +69,11 @@ export default function RegisterPage(){
     };
 
     if (isAuthenticated()) {
-        return <Navigate to="/dashboard" />
-    }
+        console.log("User is authenticated. Navigating to dashboard...");
+        return <Navigate to="/dashboard" replace />;
+      }
+      
+      
     
     return (
         <div>
