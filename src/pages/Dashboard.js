@@ -4,7 +4,7 @@ import NavBar from "../components/NavBar";
 import { UserDetailsApi } from "../services/Api";
 import { logout, isAuthenticated } from "../services/Auth";
 import axios from "axios";
-import "./Dashboard.css"; // Import updated CSS
+import "./Dashboard.css";
 
 export default function DashboardPage() {
     const navigate = useNavigate();
@@ -14,28 +14,35 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(false);
     const chatWindowRef = useRef(null);
 
+    // ✅ Check authentication on load
     useEffect(() => {
-        if (isAuthenticated()) {
-            UserDetailsApi()
-                .then((response) => {
-                    const userData = response.data.users[0];
-                    setUser({
-                        name: userData.displayName,
-                        email: userData.email,
-                        localId: userData.localId,
-                    });
-                    setMessages([
-                        {
-                            sender: "MindSync",
-                            text: `Hey ${userData.displayName}! I'm MindSync, your AI support buddy. What's on your mind?`,
-                            timestamp: new Date().toLocaleTimeString(),
-                        },
-                    ]);
-                })
-                .catch((error) => console.error("Error fetching user details:", error));
+        if (!isAuthenticated()) {
+            navigate("/login");
+            return;
         }
-    }, []);
 
+        UserDetailsApi()
+            .then((response) => {
+                const userData = response.data.users[0];
+                setUser({
+                    name: userData.displayName,
+                    email: userData.email,
+                    localId: userData.localId,
+                });
+                setMessages([
+                    {
+                        sender: "MindSync",
+                        text: `Hey ${userData.displayName || "there"}! I'm MindSync, your AI support buddy. What's on your mind?`,
+                        timestamp: new Date().toLocaleTimeString(),
+                    },
+                ]);
+            })
+            .catch((error) => {
+                console.error("❌ Error fetching user details:", error);
+            });
+    }, [navigate]);
+
+    // ✅ Auto-scroll to latest message
     useEffect(() => {
         if (chatWindowRef.current) {
             chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
@@ -47,10 +54,6 @@ export default function DashboardPage() {
         navigate("/login");
     };
 
-    if (!isAuthenticated()) {
-        return <Navigate to="/login" />;
-    }
-
     const sendMessage = async () => {
         if (!input.trim()) return;
 
@@ -59,7 +62,7 @@ export default function DashboardPage() {
             text: input,
             timestamp: new Date().toLocaleTimeString(),
         };
-        setMessages([...messages, newMessage]);
+        setMessages((prev) => [...prev, newMessage]);
         setInput("");
         setIsLoading(true);
 
@@ -69,8 +72,8 @@ export default function DashboardPage() {
                 message: input,
             });
 
-            setMessages((prevMessages) => [
-                ...prevMessages,
+            setMessages((prev) => [
+                ...prev,
                 {
                     sender: "MindSync",
                     text: response.data.answer,
@@ -78,9 +81,9 @@ export default function DashboardPage() {
                 },
             ]);
         } catch (error) {
-            console.error("Error fetching chatbot response:", error);
-            setMessages((prevMessages) => [
-                ...prevMessages,
+            console.error("❌ Chatbot error:", error);
+            setMessages((prev) => [
+                ...prev,
                 {
                     sender: "MindSync",
                     text: "Oops! Something went wrong. Please try again later.",
@@ -99,12 +102,17 @@ export default function DashboardPage() {
                 <h1 className="chat-title">MindSync - AI Support</h1>
                 <div className="chat-box" ref={chatWindowRef}>
                     {messages.map((msg, index) => (
-                        <div key={index} className={`message ${msg.sender === "You" ? "user-message" : "bot-message"}`}>
+                        <div
+                            key={index}
+                            className={`message ${msg.sender === "You" ? "user-message" : "bot-message"}`}
+                        >
                             <p className="message-text">{msg.text}</p>
                             <span className="message-time">{msg.timestamp}</span>
                         </div>
                     ))}
-                    {isLoading && <div className="typing-indicator">MindSync is typing...</div>}
+                    {isLoading && (
+                        <div className="typing-indicator">MindSync is typing...</div>
+                    )}
                 </div>
                 <div className="chat-input-area">
                     <input
@@ -115,7 +123,9 @@ export default function DashboardPage() {
                         className="chat-input"
                         onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                     />
-                    <button onClick={sendMessage} className="send-button">→</button>
+                    <button onClick={sendMessage} className="send-button">
+                        →
+                    </button>
                 </div>
             </main>
         </div>

@@ -1,14 +1,13 @@
-import { HashRouter, Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes, useLocation } from "react-router-dom";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/Dashboard";
-import { useLocation } from "react-router-dom";
 
 function App() {
   return (
     <div className="App">
       <HashRouter>
-      <RouteDebugger />
+        <RouteDebugger /> {/* ✅ Move this inside HashRouter */}
         <Routes>
           <Route path="/" element={<RegisterPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -22,7 +21,8 @@ function App() {
 
 function RouteDebugger() {
   const location = useLocation();
-  console.log("Current route:", location.pathname);
+  console.log("📍 Current route:", location.pathname);
   return null;
 }
+
 export default App;

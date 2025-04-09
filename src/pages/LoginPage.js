@@ -25,49 +25,57 @@ export default function LoginPage() {
 
     const navigate = useNavigate();
 
-    // Optional: Redirect already authenticated users
+    // Redirect to dashboard if already authenticated
     useEffect(() => {
         if (isAuthenticated()) {
             navigate("/dashboard");
         }
-    }, []);
+    }, [navigate]);
 
     const handleInput = (event) => {
         setInputs({ ...inputs, [event.target.name]: event.target.value });
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        let errors = initialStateErrors;
+        let validationErrors = { ...initialStateErrors };
         let hasError = false;
 
-        if (inputs.email === "") {
-            errors.email.required = true;
+        // Validation
+        if (!inputs.email) {
+            validationErrors.email.required = true;
             hasError = true;
         }
-        if (inputs.password === "") {
-            errors.password.required = true;
+        if (!inputs.password) {
+            validationErrors.password.required = true;
             hasError = true;
         }
 
-        if (!hasError) {
+        setErrors(validationErrors);
+
+        if (hasError) return;
+
+        try {
             setLoading(true);
-            LoginApi(inputs)
-                .then((response) => {
-                    storeUserData(response.data.idToken);
-                    navigate("/dashboard"); // ✅ navigate here after successful login
-                })
-                .catch((err) => {
-                    if (err.code === "ERR_BAD_REQUEST") {
-                        setErrors({ ...errors, custom_error: "Invalid Credentials." });
-                    }
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        }
+            const response = await LoginApi(inputs);
+            console.log("✅ Login success:", response.data);
 
-        setErrors({ ...errors });
+            storeUserData(response.data.idToken); // Store token
+            navigate("/dashboard"); // Navigate to dashboard
+        } catch (err) {
+            console.error("❌ Login failed:", err);
+
+            const errorMessage = err?.response?.data?.error?.message;
+
+            let custom_error = "Something went wrong!";
+            if (errorMessage === "INVALID_PASSWORD" || errorMessage === "EMAIL_NOT_FOUND") {
+                custom_error = "Invalid email or password.";
+            }
+
+            setErrors({ ...initialStateErrors, custom_error });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const togglePasswordVisibility = () => {
@@ -90,12 +98,13 @@ export default function LoginPage() {
                                         className="form-control"
                                         onChange={handleInput}
                                         name="email"
-                                        placeholder="email"
+                                        placeholder="Enter your email"
                                     />
                                     {errors.email.required && (
                                         <span className="text-danger">Email is required.</span>
                                     )}
                                 </div>
+
                                 <div className="form-group">
                                     <label className="text-uppercase">Password</label>
                                     <div className="password-input-container">
@@ -104,7 +113,7 @@ export default function LoginPage() {
                                             type={showPassword ? "text" : "password"}
                                             onChange={handleInput}
                                             name="password"
-                                            placeholder="password"
+                                            placeholder="Enter your password"
                                         />
                                         <button
                                             type="button"
@@ -118,6 +127,7 @@ export default function LoginPage() {
                                         <span className="text-danger">Password is required.</span>
                                     )}
                                 </div>
+
                                 <div className="form-group">
                                     {loading && (
                                         <div className="text-center">
@@ -138,9 +148,10 @@ export default function LoginPage() {
                                         value="Login"
                                     />
                                 </div>
+
                                 <div className="clearfix"></div>
                                 <div className="form-group">
-                                    Create new account ? Please <Link to="/register">Register</Link>
+                                    Create new account? Please <Link to="/register">Register</Link>
                                 </div>
                             </form>
                         </div>
